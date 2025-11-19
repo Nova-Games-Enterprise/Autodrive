@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Car ADAS HUD</title>
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="container" class="center">
+        <!-- HUD overlay -->
+        <div id="hud">
+            <div id="hud-ap" class="hud-pill">AP: OFF</div>
+            <div id="hud-safety" class="hud-pill">SAFETY: OFF</div>
+            <div id="hud-speed" class="hud-pill">SPD: 0</div>
+        </div>
+
+        <!-- Linee guida parcheggio -->
+        <canvas id="canvas" width="1800" height="1000"></canvas>
+        <canvas id="canvas2" width="1800" height="1000"></canvas>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>

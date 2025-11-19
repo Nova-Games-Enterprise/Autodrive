@@ -1,0 +1,64 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  display: none; /* viene mostrato dallo script quando necessario */
+}
+
+#container.center {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+}
+
+#canvas,
+#canvas2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+}
+
+/* HUD */
+
+#hud {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.hud-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+
+/* stati safety */
+
+.hud-safe {
+  background: rgba(0, 128, 0, 0.7);
+}
+
+.hud-warning {
+  background: rgba(255, 165, 0, 0.8);
+}
+
+.hud-brake {
+  background: rgba(178, 34, 34, 0.85);
+}
