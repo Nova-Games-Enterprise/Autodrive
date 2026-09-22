@@ -20,21 +20,39 @@ native failures, ped changes, non-finite values, heartbeat bounds and a suspende
 GitHub Actions runs the same command on Ubuntu 24.04 with distribution Lua 5.4 and runner-provided Node.
 Concrete CI versions/results belong to the workflow run. Local success does not imply remote CI success.
 
+## Native FXServer lifecycle run: 2026-09-22
+
+- Windows 10.0.26100.33158.
+- FXServer Windows artifact **35245**.
+- cfx-server-data commit 32d98e7524b952faf8b220d719615b0346b0a6cc.
+- Resource archive from PR #3 commit 7cc422ad5d4d35ef6db32b7245adc4f2e773708e.
+- Loopback-only test endpoint: 127.0.0.1:30129.
+- Cfx license authentication succeeded.
+- Clean server bootstrap created the nge_autodrive script environment and started 2.0.0-dev.1.
+- Restricted console status command returned the expected factory-only state.
+- Explicit restart nge_autodrive passed three consecutive clean cycles after configuration cleanup.
+- Explicit stop/start passed; info.json reported the resource absent while stopped and present after start.
+- The obsolete set onesync off test-config line was removed after artifact 35245 warned that onesync is an internal ConVar; the subsequent clean bootstrap had no Autodrive or configuration warning.
+- No Autodrive stderr output or server-side resource error was observed in the recorded lifecycle checks.
+
+This validates the server/resource lifecycle only. It does **not** validate a connected FiveM client, NUI/CEF,
+vehicle natives, physical braking, routing, game input, network ownership migration or frame-time behaviour.
 ## What these results do not demonstrate
 
-Mocks validate code decisions/expected calls, not the game engine. No live FiveM/FXServer session, actual
+Mocks validate code decisions/expected calls, not the game engine. No live FiveM client session, actual
 stopping distance, CEF visuals/audio, controller-device behaviour, multiplayer ownership migration,
 artifact/game-build matrix or profiler baseline has been verified here. This preview is not approved
 for production, stable release or compatibility certification.
 
-## Required in-game acceptance: all pending
+## Required in-game acceptance
 
 Record artifact version, game build, OneSync mode, operating systems, resource commit, model, input
 device, commands, outcome and evidence. Do not mark a case passed without evidence.
 
 | Gate | Expected outcome | Result |
 | --- | --- | --- |
-| Start/restart/stop | No console errors; HUD initializes/disappears; no stuck controls | Pending |
+| FXServer resource lifecycle | Start/restart/stop without resource errors; endpoint state matches lifecycle | **Passed 2026-09-22** |
+| Client lifecycle | HUD initializes/disappears; no stuck controls across restart/stop | Pending |
 | Stock/custom models | Correct allowlist and bounds; unsupported models cannot engage | Pending |
 | Remappable keyboard/controller | No chat/menu conflict; prompt manual takeover | Pending |
 | Forward obstacle/vehicle | Correct warning/braking; no inadvertent reverse movement | Pending |
@@ -52,6 +70,6 @@ device, commands, outcome and evidence. Do not mark a case passed without eviden
 
 ## Promotion
 
-Keep the PR in draft until native smoke/lifecycle gates have evidence. Review the network surface,
+Keep the PR in draft until connected-client and gameplay smoke/lifecycle gates have evidence. Review the network surface,
 task/control coexistence, UI and deliberate removals. Stable promotion additionally requires a licensing
 decision, supported-runtime matrix and reproducible packaging.
