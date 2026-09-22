@@ -1,60 +1,115 @@
 # NGE Autodrive
 
-Vehicle-assistance experiments for FiveM, maintained by **Nova Games Enterprise**.
-Original implementation by **Bacasuoro**.
+**A vehicle-assistance project for FiveM, maintained by Nova Games Enterprise.**
 
-> **Recovery in progress, September 2026.** This is the original Autodrive
-> repository, not a replacement or a fork. The historical prototype is being
-> rebuilt in small, reviewable increments. It is **not a production-ready release**.
+> **Recovery preview: `2.0.0-dev.1`. Not a stable release.**
+> This branch rebuilds the 2025 prototype around explicit safety boundaries and regression tests.
+> Automated tests exercise policy and mocked native contracts. FiveM driving, braking, visuals,
+> network behaviour and framework coexistence have **not yet passed in-game acceptance**.
 
-## Current status
+## What is in this preview?
 
-The 2025 prototype contains waypoint driving, forward/rear obstacle checks,
-a small NUI overlay and an experimental mechanic-installable module.
-The old "rear camera" is a guide-line overlay, not an implemented camera.
+| Component | Implemented scope | Verification boundary |
+| --- | --- | --- |
+| Waypoint drive | GTA driving task, live set-speed updates, cancellation, arrival and stall handling | Lua tests and native-call mocks; in-game behaviour pending |
+| Collision assistance | Direction-aware forward/reverse probes, warning/brake requests, stale-result handling | Policy and mocked lifecycle tests; calibration and stopping behaviour pending |
+| Sensor lifecycle | One in-flight capsule query, bounded cadence, stale-context discard | Deterministic pending/invalid/timeout tests |
+| Driver controls | Remappable keys; vehicle, seat, control-authority and lifecycle checks | Mocked runtime regression tests |
+| HUD | Local responsive NUI, explicit units, preview label, stale-status indication | JavaScript DOM mocks; visual/CEF acceptance pending |
+| Audio | Optional locally generated alerts; off by default | Audio API mocks; CEF behaviour pending |
+| Server | Factory profiles only; no network installation or inventory mutation path | Server-surface regression checks |
 
-The recovery starts with [issue #1](https://github.com/Nova-Games-Enterprise/Autodrive/issues/1):
-security boundaries, lifecycle handling, testable driving policies and regression tests.
-Work stays in this repository and preserves its original history and links.
+**Not included yet:** paid module installation, persistent ownership, inventory/framework adapters,
+state-bag replication, a real rear camera, ACC, blind-spot detection, cross-traffic alerts or recovery routing.
+These are roadmap items, not compatibility or feature claims.
 
-**Do not deploy the historical module-installation events on a public server.**
-They do not establish a trustworthy vehicle identity or persist installations.
-The first recovery increment retires that path until a server-validated,
-persistent workflow is implemented and tested.
+Waypoint drive uses GTA's built-in driving task. It is not an independent autonomous-driving stack.
+Collision assistance uses fixed, experimental thresholds and a limited probe volume; it does not
+guarantee detection or collision avoidance.
 
-## Direction
+## Try it in an isolated development server
 
-| Area | Recovery target |
-| --- | --- |
-| Driving core | Framework-independent policies with explicit activation and cancellation |
-| Sensors | Bounded asynchronous queries, direction-aware decisions, stale-data handling |
-| Vehicle lifecycle | Release only controls owned by this resource; clean up on exit and stop |
-| UI and sound | Local-only feedback, bounded updates, no external assets or sensor network traffic |
-| Installation | Server authority, stable identity, inventory transactions and persistence before re-enabling |
-| Integrations | Separately tested adapters rather than assumed ESX/QB/Qbox compatibility |
-| Public releases | Reproducible checks, recorded in-game results, documented limitations |
+Use a disposable FiveM development environment, not a live server. No FiveM artifact/game-build
+combination has been certified by this recovery work.
 
-See the [roadmap](docs/ROADMAP.md), [validation gates](docs/VALIDATION.md) and
-[security model](SECURITY.md). A checked-in feature or a passing mock test is
-not evidence that the feature works in the game runtime.
+```sh
+git clone --branch 1-recovery-foundation https://github.com/Nova-Games-Enterprise/Autodrive.git nge_autodrive
+```
 
-## Scope and claims
+Place the folder under the development server's `resources` directory and add:
 
-Autodrive is a **game resource**, not automotive safety software or a replacement
-for FiveM anti-cheat. Its waypoint driving relies on GTA/FiveM driving tasks.
-No HELIX runtime integration or compatibility is currently claimed.
+```cfg
+ensure nge_autodrive
+```
 
-The historical `README_ADAS.txt` describes the prototype; it is not a current
-installation or compatibility guarantee. There is no stable 2.x release yet.
+The preview has no ESX, QBCore, Qbox, inventory, database or InteractSound dependency. This means the core
+is framework-independent, **not** that every framework integration has been tested. `Config.Vehicles` is
+an explicit factory-profile allowlist. `sultan` provides a built-in vehicle profile; `tesla` and
+`gbschwartzers` retain the old custom-model names and require your own corresponding assets.
+No third-party vehicle assets are included.
 
-## Contributing
+Default controls: **K** for waypoint drive, **J** for collision assistance, **Page Up / Page Down** for set
+speed. They are remappable in FiveM. Set a waypoint, enter an allowed vehicle as driver, release manual
+driving input and let the sensor become ready before activation. Accelerator, brake or steering cancels
+the driving task. A warning, brake condition or stale sensor also cancels it; no automatic resume occurs.
 
-Please start with an issue describing the expected behavior and a reproducible
-test. Keep changes focused, include regression coverage and distinguish native
-runtime observations from mock results. Avoid publishing exploit payloads or
-server credentials. See [SECURITY.md](SECURITY.md).
+`Config.Units` is `kmh` or `mph`. Cruise configuration uses that unit; the native task receives metres per
+second. Defaults are 50 km/h with a 20-80 km/h set-speed range. This is a configuration choice, not a
+tested safe-speed envelope. Read [migration notes](docs/MIGRATION.md) before reusing old configuration.
 
-## Licensing
+## Verify the code
 
-A project license has not yet been selected by the NGE maintainers.
-This recovery does not add a license or change existing authorship.
+Developer checks require **Lua 5.4** and **Node.js 18 or later**. No npm packages are required.
+
+```sh
+node scripts/verify.mjs
+```
+
+On Linux the runner looks for `lua5.4`; on Windows it looks for `lua`. Select another path explicitly:
+
+```powershell
+$env:LUA_BIN = 'C:\path\to\lua.exe'
+node scripts/verify.mjs
+```
+
+The suite covers configuration, conversion, directional policy, pending/stale probes, bounded query
+allocation, controller transitions, runtime lifecycle, HUD rate limits, NUI/audio failures, manifest paths
+and the deliberately closed network surface. GitHub Actions runs the same entrypoint with read-only
+repository permissions and no persisted checkout credentials.
+
+See [validation evidence and acceptance checklist](docs/VALIDATION.md). Automated tests do not replace
+physical in-game verification. No frame-time, FPS or multiplayer load figures are claimed.
+
+## Project map
+
+```text
+config.lua             Factory profiles and bounded settings
+shared/core.lua        Pure policies, config checks, async-probe lifecycle
+client/controller.lua  Injected driving controller and transitions
+client/sensors.lua     Native adapter for directional capsule queries
+client/hud.lua         Changed-state publishing and heartbeat
+client/main.lua        Input, driver lifecycle and per-frame brake requests
+server/main.lua        Restricted diagnostics; no installation endpoints
+html/                  Local HUD with no remote scripts, fonts or requests
+tests/                 Plain-Lua and Node.js regression tests
+scripts/verify.mjs     Shared local/CI entrypoint
+docs/                  Architecture, migration, roadmap and release gates
+```
+
+## Development and review
+
+The repository URL and historical default-branch name are preserved. The documentation-only recovery notice from PR #2 is retained. Runtime recovery work is reviewed in a
+separate branch and PR. The original implementation remains at commit
+`681dff42c6915aba7edfcda414c211b78ac5cf47`.
+
+Read [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md), [security policy](SECURITY.md)
+and [contribution guidelines](CONTRIBUTING.md). This project currently targets FiveM only; no
+other-platform compatibility or endorsement is claimed.
+
+## Credits and licensing
+
+Maintained by the **Nova Games Enterprise team**. Original 2025 implementation by **Bacasuoro**;
+individual contributions remain attributable through Git history.
+
+Licensing is pending an explicit rights-holder decision. This recovery increment does not introduce a
+license grant or claim the repository is already licensed as open source.

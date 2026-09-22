@@ -1,31 +1,16 @@
-# Security model and reporting
+# Security policy
 
-The historical prototype is not approved for production. Its networked module
-installation is being retired before further feature expansion.
+This is an experimental FiveM resource, not a security certification or anti-cheat product. The recovery
+preview has no paid installation, inventory mutation or module-sync network endpoint. Local gameplay
+state does not prove money, item ownership, permissions or vehicle ownership.
 
-## Boundaries
+Do not post exploit instructions, credentials, server/player data or personal identifiers publicly.
+Use GitHub private vulnerability reporting when available, or contact a maintainer privately through an
+existing trusted channel. No dedicated monitored disclosure address or response SLA is established yet.
 
-- A client can modify its own scripts. Assistance is not an anti-cheat.
-- No inventory, payments or durable entitlement may be authorized by a
-  client-supplied plate, boolean, local event or state-bag value.
-- State bags can distribute state; they are not a database or authorization boundary.
-- Sensor/UI/audio loops must not generate per-frame network requests.
-- Vehicle ownership is checked before control changes. Do not request ownership
-  of unrelated vehicles or change global server/anti-cheat configuration.
-- Network features are unavailable until authority and persistence paths are
-  tested. No permissive fallback when a framework, database or inventory is missing.
+Future economy features require server validation, bounded/idempotent requests, crash-tested persistence,
+tested inventory adapters and explicit failure handling. Entity-owner state bags are not an authoritative
+registry. See `docs/ARCHITECTURE.md`.
 
-The project follows the principles in Cfx's
-[Secure Your Events](https://docs.fivem.net/docs/developers/server-security/).
-
-## Reporting
-
-For a suspected security issue, contact the NGE maintainers through an existing
-private channel. Do not post a working abuse payload, credentials or private
-server data in a public issue. There is not yet a dedicated disclosure mailbox
-or a guaranteed response-time policy.
-
-## Release gate
-
-A passing test suite does not establish production security. Public-server
-use requires the runtime and integration gates in `docs/VALIDATION.md`.
+This recovery work changes no production server, server-wide security convar, firewall, DNS or proxy.
+Use a disposable development server for validation.
