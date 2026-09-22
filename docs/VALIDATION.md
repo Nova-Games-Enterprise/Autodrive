@@ -6,13 +6,16 @@
 - Source SHA-256: `2335b6c582a52654f94612bf10d2f4672805d05329aa6568b1d8cd9e5c6fb8e6`, matched against https://www.lua.org/ftp/.
 - Node.js **v24.15.0**, Windows x64.
 - Command: `node scripts/verify.mjs`, with `LUA_BIN` selecting that interpreter.
-- **74 Lua tests passed; 0 failed.** Includes manifest/syntax and mocked client/server lifecycle checks.
-- **31 JavaScript tests passed; 0 failed.** Includes DOM-message validation, stale-state recovery and audio failures.
+- **83 Lua tests passed; 0 failed.** Includes manifest/syntax and mocked client/server lifecycle checks.
+- **32 JavaScript tests passed; 0 failed.** Includes DOM-message validation, stale-state recovery and audio failures.
 - One policy test sweeps 2,501 deterministic speed/distance pairs, not 2,501 in-game tests.
 - One pending-query test attempts 10,000 starts and verifies just one handle allocation.
 
 Three regressions found in the first local run were fixed before publication and retained as tests:
 invalid data at standstill, speed updates after switching vehicles, and sensor work after disabling assistance.
+
+Additional review added tests for stationary obstructions, interrupted tasks, pause/focus transitions,
+native failures, ped changes, non-finite values, heartbeat bounds and a suspended audio context.
 
 GitHub Actions runs the same command on Ubuntu 24.04 with distribution Lua 5.4 and runner-provided Node.
 Concrete CI versions/results belong to the workflow run. Local success does not imply remote CI success.
