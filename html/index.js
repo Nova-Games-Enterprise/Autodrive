@@ -1,112 +1,75 @@
-let showing = false;
+'use strict';
+(() => {
+  const panel = document.getElementById('panel');
+  const speed = document.getElementById('speed');
+  const units = document.getElementById('units');
+  const autopilot = document.getElementById('autopilot');
+  const safety = document.getElementById('safety');
+  const reason = document.getElementById('reason');
+  const modes = new Set(['off', 'driving', 'arrived', 'interrupted']);
+  const states = new Set(['off', 'ready', 'warning', 'brake', 'unavailable']);
+  let receivedAt = -Infinity;
+  let lastBeep = -Infinity;
+  let audioContext;
+  let audioFailed = false;
+  let resumePending = false;
 
-const bodyElem = document.body;
-const canvas1 = document.getElementById("canvas");
-const canvas2 = document.getElementById("canvas2");
+  function beep(state, now) {
+    if (audioFailed || now - lastBeep < 500 || !['warning', 'brake'].includes(state)) return;
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (!Audio) return;
+    lastBeep = now;
+    try {
+      audioContext ??= new Audio();
+      if (audioContext.state !== 'running') {
+        if (resumePending) return;
+        resumePending = true;
+        Promise.resolve(audioContext.resume())
+          .then(() => { resumePending = false; })
+          .catch(() => { resumePending = false; audioFailed = true; });
+        return;
+      }
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const t = audioContext.currentTime;
+      oscillator.frequency.value = state === 'brake' ? 900 : 650;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.08, t + 0.01);
+      gain.gain.linearRampToValueAtTime(0, t + 0.12);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      oscillator.start(t);
+      oscillator.stop(t + 0.13);
+    } catch { audioFailed = true; }
+  }
 
-const ctx1 = canvas1.getContext("2d");
-const ctx2 = canvas2.getContext("2d");
+  window.addEventListener('message', (event) => {
+    const d = event.data;
+    if (!d || typeof d !== 'object' || Array.isArray(d) || d.type !== 'state' || d.version !== 1
+      || typeof d.visible !== 'boolean' || typeof d.audio !== 'boolean'
+      || !modes.has(d.autopilot) || !states.has(d.safety)
+      || !['kmh', 'mph'].includes(d.units)
+      || !Number.isFinite(d.cruiseSpeed) || d.cruiseSpeed < 0 || d.cruiseSpeed > 160
+      || typeof d.reason !== 'string' || d.reason.length > 80) return;
+    const now = performance.now();
+    receivedAt = now;
+    panel.hidden = !d.visible;
+    speed.textContent = String(Math.round(d.cruiseSpeed));
+    units.textContent = d.units === 'kmh' ? 'km/h' : 'mph';
+    autopilot.textContent = d.autopilot.toUpperCase();
+    safety.textContent = d.safety.toUpperCase();
+    safety.dataset.state = d.safety;
+    reason.textContent = d.reason.replaceAll('_', ' ');
+    if (d.visible && d.audio) beep(d.safety, now);
+  });
 
-const hudAp = document.getElementById("hud-ap");
-const hudSafety = document.getElementById("hud-safety");
-const hudSpeed = document.getElementById("hud-speed");
-
-window.addEventListener("message", (event) => {
-    const data = event.data;
-
-    if (data.type === "ui") {
-        showing = data.status === true;
-        bodyElem.style.display = showing ? "block" : "none";
-        if (!showing) {
-            clearLines();
-        }
-    }
-
-    if (data.type === "angleinfo") {
-        if (!showing) return;
-        const angle = Number(data.angle) || 0;
-        drawGuideLines(angle);
-    }
-
-    if (data.type === "hud") {
-        updateHud(data);
-    }
-});
-
-function clearLines() {
-    ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
-    ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-}
-
-function drawGuideLines(angle) {
-    clearLines();
-
-    const maxAngle = 40;
-    const clampedAngle = Math.max(Math.min(angle, maxAngle), -maxAngle);
-    const factor = clampedAngle / maxAngle;
-
-    const midX = canvas1.width / 2;
-    const startY = canvas1.height * 0.1;
-    const endY = canvas1.height * 0.9;
-
-    const spread = canvas1.width * 0.12;
-    const curve = canvas1.width * 0.25 * factor;
-
-    // linea sinistra
-    ctx1.beginPath();
-    ctx1.moveTo(midX - spread, startY);
-    ctx1.quadraticCurveTo(
-        midX - spread - curve,
-        (startY + endY) / 2,
-        midX - spread,
-        endY
-    );
-    ctx1.strokeStyle = "#e6e6e6";
-    ctx1.lineWidth = 7;
-    ctx1.stroke();
-
-    // linea destra
-    ctx2.beginPath();
-    ctx2.moveTo(midX + spread, startY);
-    ctx2.quadraticCurveTo(
-        midX + spread - curve,
-        (startY + endY) / 2,
-        midX + spread,
-        endY
-    );
-    ctx2.strokeStyle = "#e6e6e6";
-    ctx2.lineWidth = 7;
-    ctx2.stroke();
-}
-
-function updateHud(data) {
-    if (typeof data.autopilot !== "undefined") {
-        hudAp.textContent = data.autopilot ? "AP: ON" : "AP: OFF";
-    }
-
-    if (typeof data.cruiseSpeed !== "undefined") {
-        const spd = Math.round(Number(data.cruiseSpeed) || 0);
-        hudSpeed.textContent = "SPD: " + spd;
-    }
-
-    if (typeof data.safety !== "undefined") {
-        let state = String(data.safety || "off");
-
-        hudSafety.classList.remove("hud-safe", "hud-warning", "hud-brake");
-
-        if (state === "off") {
-            hudSafety.textContent = "SAFETY: OFF";
-        } else if (state === "normal") {
-            hudSafety.textContent = "SAFETY: ON";
-            hudSafety.classList.add("hud-safe");
-        } else if (state === "warning") {
-            hudSafety.textContent = "SAFETY: WARNING";
-            hudSafety.classList.add("hud-warning");
-        } else if (state === "brake") {
-            hudSafety.textContent = "SAFETY: BRAKE";
-            hudSafety.classList.add("hud-brake");
-        } else {
-            hudSafety.textContent = "SAFETY: " + state.toUpperCase();
-        }
-    }
-}
+  // Do not leave a green indicator onscreen after a stalled/crashed Lua bridge.
+  window.setInterval(() => {
+    if (panel.hidden || performance.now() - receivedAt <= 2500) return;
+    autopilot.textContent = 'SIGNAL LOST';
+    safety.textContent = 'UNAVAILABLE';
+    safety.dataset.state = 'unavailable';
+    reason.textContent = 'Assistance status is stale. Take manual control.';
+  }, 500);
+})();

@@ -1,28 +1,17 @@
 fx_version 'cerulean'
 game 'gta5'
+name 'NGE Autodrive'
+author 'Nova Games Enterprise; original implementation by Bacasuoro'
+description 'Experimental, regression-tested vehicle assistance foundation for FiveM'
+version '2.0.0-dev.1'
 
-name 'AFAS'
-author 'Bacasuoro'
-description 'Autopilot, ADAS, retrocamera e HUD per veicoli selezionati'
-version '1.0.0'
-
-lua54 'yes'
-
-shared_script 'config.lua'
-
+shared_scripts { 'config.lua', 'shared/core.lua' }
 client_scripts {
-    'client.lua'
+    'client/sensors.lua',
+    'client/controller.lua',
+    'client/hud.lua',
+    'client/main.lua'
 }
-
-server_scripts {
-    'server.lua'
-}
-
+server_script 'server/main.lua'
 ui_page 'html/index.html'
-
-files {
-    'html/index.html',
-    'html/index.css',
-    'html/reset.css',
-    'html/index.js'
-}
+files { 'html/index.html', 'html/index.css', 'html/index.js' }
