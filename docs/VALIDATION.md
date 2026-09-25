@@ -7,7 +7,7 @@
 - Node.js **v24.15.0**, Windows x64.
 - Command: `node scripts/verify.mjs`, with `LUA_BIN` selecting that interpreter.
 - **83 Lua tests passed; 0 failed.** Includes manifest/syntax and mocked client/server lifecycle checks.
-- **32 JavaScript tests passed; 0 failed.** Includes DOM-message validation, stale-state recovery and audio failures.
+- **33 JavaScript tests passed; 0 failed.** Includes DOM-message validation, stale-state recovery, audio failures and a transparent-NUI-canvas regression guard.
 - One policy test sweeps 2,501 deterministic speed/distance pairs, not 2,501 in-game tests.
 - One pending-query test attempts 10,000 starts and verifies just one handle allocation.
 
@@ -35,13 +35,23 @@ Concrete CI versions/results belong to the workflow run. Local success does not 
 - The obsolete set onesync off test-config line was removed after artifact 35245 warned that onesync is an internal ConVar; the subsequent clean bootstrap had no Autodrive or configuration warning.
 - No Autodrive stderr output or server-side resource error was observed in the recorded lifecycle checks.
 
-This validates the server/resource lifecycle only. It does **not** validate a connected FiveM client, NUI/CEF,
-vehicle natives, physical braking, routing, game input, network ownership migration or frame-time behaviour.
+This validates the server/resource lifecycle only. It does **not** validate vehicle natives, physical braking, routing, game input, network ownership migration or frame-time behaviour.
+
+## Connected-client NUI composition run: 2026-09-25
+
+- FiveM client connected to the ESX Legacy test server with Autodrive enabled.
+- With the pre-fix NUI CSS, the game world rendered black while game audio and unrelated HUD elements remained active.
+- Stopping only the Autodrive resource restored normal world rendering.
+- The Autodrive NUI declared `color-scheme: dark` on `:root` while relying on a transparent body.
+- The fix removes root `color-scheme`, explicitly keeps both `html` and `body` transparent, and adds a regression test for that invariant.
+- Re-enabling the patched Autodrive resource restored normal world rendering in the connected client.
+- This is A/B evidence for the NUI composition regression only. It does not validate waypoint driving, braking behaviour, controller input, audio alerts or performance.
+
 ## What these results do not demonstrate
 
-Mocks validate code decisions/expected calls, not the game engine. No live FiveM client session, actual
-stopping distance, CEF visuals/audio, controller-device behaviour, multiplayer ownership migration,
-artifact/game-build matrix or profiler baseline has been verified here. This preview is not approved
+Mocks validate code decisions/expected calls, not the game engine. One connected-client NUI composition regression has been checked, but actual
+stopping distance, HUD behaviour across supported resolutions, audio, controller-device behaviour, multiplayer ownership migration,
+artifact/game-build matrix or profiler baseline have not been verified here. This preview is not approved
 for production, stable release or compatibility certification.
 
 ## Required in-game acceptance

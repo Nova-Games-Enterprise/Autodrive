@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source = fs.readFileSync('html/index.js', 'utf8');
+const cssSource = fs.readFileSync('html/index.css', 'utf8');
 
 function fixture(options = {}) {
   let now = 0;
@@ -46,6 +47,10 @@ function fixture(options = {}) {
 }
 
 test('HUD starts hidden', () => { assert.equal(fixture().elements.panel.hidden, true); });
+test('NUI canvas stays explicitly transparent', () => {
+  assert.doesNotMatch(cssSource, /color-scheme\s*:/i);
+  assert.ok(cssSource.includes('html, body { margin: 0; width: 100%; height: 100%; background: transparent !important; overflow: hidden; }'));
+});
 test('valid snapshot renders speed, units, route and safety', () => {
   const f = fixture(); f.send(f.state);
   assert.equal(f.elements.panel.hidden, false);
