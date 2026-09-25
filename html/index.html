@@ -1,25 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Smart Car ADAS HUD</title>
-    <link rel="stylesheet" href="reset.css">
-    <link rel="stylesheet" href="index.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; object-src 'none'">
+  <title>NGE Autodrive</title>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div id="container" class="center">
-        <!-- HUD overlay -->
-        <div id="hud">
-            <div id="hud-ap" class="hud-pill">AP: OFF</div>
-            <div id="hud-safety" class="hud-pill">SAFETY: OFF</div>
-            <div id="hud-speed" class="hud-pill">SPD: 0</div>
-        </div>
-
-        <!-- Linee guida parcheggio -->
-        <canvas id="canvas" width="1800" height="1000"></canvas>
-        <canvas id="canvas2" width="1800" height="1000"></canvas>
+  <main id="panel" hidden aria-label="NGE vehicle assistance">
+    <header><span class="brand">NGE <span class="divider">/</span> AUTODRIVE</span><span class="preview">PREVIEW</span></header>
+    <div class="readout"><strong id="speed">0</strong><span id="units">km/h</span><span class="caption">SET SPEED</span></div>
+    <div class="statuses" role="status" aria-live="polite">
+      <div><span class="label">WAYPOINT DRIVE</span><strong id="autopilot">OFF</strong></div>
+      <div><span class="label">COLLISION ASSIST</span><strong id="safety">OFF</strong></div>
     </div>
-
-    <script src="index.js"></script>
+    <p id="reason">Engineering preview. Stay in control.</p>
+    <footer>Toggle collision assist to return to unassisted driving.</footer>
+  </main>
+  <script src="index.js"></script>
 </body>
 </html>

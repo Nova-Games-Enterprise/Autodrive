@@ -1,32 +1,28 @@
-# File di sistema
+# Local/editor files
 .DS_Store
 Thumbs.db
-
-# FiveM / Cfx
-*.cache
+.vscode/
+.idea/
+*.user
+*.suo
+.vs/
+# Runtime, credentials, generated output and backups
+.env
+.env.*
+!.env.example
+server.cfg
 cache/
 caches/
 logs/
 *.log
 *.rpf
 *.db
-
-# Node.js (se usato)
+*.sqlite*
+.nge-backups/
 node_modules/
-npm-debug.log
-yarn-error.log
-
-# Visual Studio / C# (nel caso di scripting con .NET)
-bin/
-obj/
-*.user
-*.suo
-*.vs/
-
-# Backup e temporanei
+build/
+dist/
+test-results/
 *.tmp
 *.bak
 *.old
-
-*.bat
-*.ps1
